@@ -7,10 +7,22 @@ obj_dir = obj/
 bin_dir = bin/
 
 src = $(wildcard $(src_dir)*.cpp)
-obj = $(patsubst $(src_dir)%.cpp, $(obj_dir)%.o, $(src))
+obj = $(src:.cpp=.o)
+dep = $(obj:.o=.d)
 
 out: $(obj)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(bin_dir)$@ $<
+	$(CC) -o $(bin_dir)$@ $^ $(LDFLAGS)
 
-$(obj) : $(src)
-	$(CC) $(CFLAGS) -c $< -o $@
+-include $(dep)
+
+%.d: %.cpp
+	@$(CPP) $(CFLAGS) $< -MM -MT $(@:.d=.o) >$@
+
+.PHONY: clean
+clean:
+	rm -rf $(obj) $(bin_dir)out	
+
+
+.PHONY: cleandep
+cleandep:
+	rm -rf $(dep)	
