@@ -30,10 +30,6 @@ public:
 	// Public Methods
 	std::queue<std::string> getTokenFromString(std::string input);
 	std::queue<std::string> getTokenFromFile(std::string path);
-
-	//DEBUG
-	uint testPairs(int x, int y);
-	//END DEBUG
 };
 
 #endif
