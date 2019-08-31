@@ -3,7 +3,6 @@ CFLAGS = -Wall -Wextra -Werror -std=c++17
 LDFLAGS = 
 
 src_dir = src/
-obj_dir = obj/
 bin_dir = bin/
 
 src = $(wildcard $(src_dir)*.cpp)
@@ -26,3 +25,11 @@ clean:
 .PHONY: cleandep
 cleandep:
 	rm -rf $(dep)	
+
+.PHONY: cleanup
+cleanup:
+	make clean && make cleandep && clear
+
+.PHONY: remake
+remake:
+	clear && make clean && make cleandep && make && $(bin_dir)out	
