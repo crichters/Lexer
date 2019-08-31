@@ -1,0 +1,18 @@
+var a = 10
+var b = 20
+
+func c():
+	return 20
+
+func d = return 20
+
+func e(x):
+	return x * 10
+
+
+func f(x):
+	return x+25
+
+func g(x) = x += 2; x *= 4; return x
+
+	
