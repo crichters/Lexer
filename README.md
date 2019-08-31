@@ -1,1 +1,1 @@
-# Lexer-Generator
+# Lexer
