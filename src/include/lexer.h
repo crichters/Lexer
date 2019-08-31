@@ -7,18 +7,23 @@
 #include <streambuf>
 #include <cstdio>
 #include <cmath>
+#include <cctype>
 
 // DEBUG
 //#include <iostream>
 // END DEBUG
 
+constexpr uint LXhashPairs(int x, int y){
+		return pow(2, 16) * x + y;
+}
+
+
 class Lexer {
 
 	std::queue<std::string> parseString(std::string input);
 	void throwError(std::string errorMessage);
-	uint hashPairs(int x, int y);
-	enum State {};
-	enum inputChar { alpha, numeric, space, tab, special };
+	
+
 
 
 public:
