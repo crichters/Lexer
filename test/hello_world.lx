@@ -9,9 +9,14 @@ func d = return 20
 func e(x):
 	return x * 10
 
+//line comment to be ignored by lexer
+
+/*
+	Block comment to be ignored by lexer!
+
+*/
 
 func f(x):
 	return x+25
 
 func g(x) = x += 2; x *= 4; return x
-	

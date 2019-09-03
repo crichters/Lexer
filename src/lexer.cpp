@@ -239,11 +239,10 @@ std::queue<std::string> Lexer::parseString(std::string input){
 						break;
 
 					case Special:
-						if(operators = 2){
+						if(operators = 1){
 							token += c;
-							token = appendToken(tokens, token);
+							currentState = handleDoubles(tokens, token);
 							operators = 0;
-							currentState = NoState;
 						}
 						else {
 							token += c;
@@ -273,6 +272,44 @@ std::queue<std::string> Lexer::parseString(std::string input){
 						break;
 				}
 				break;
+
+			case lineComment:
+				switch(inputChar){
+					case NewLine:
+						token = appendToken(tokens, "NEWLINE");
+						operators = 0;
+						currentState = NoState;
+						break;
+				}
+				break;	
+			
+			case blockComment:
+				switch(inputChar){
+					case Alpha:
+					case Numeric:
+					case Space:
+					case Tab:
+					case NewLine:
+						operators = 0;
+						token = "";
+						break;
+
+					case Special:
+						if(operators == 1){
+							token += c;
+							tokens.push(token);
+							if(!token.compare("*/")){
+								currentState = NoState;
+							}
+							token = "";
+						}
+						else {
+							token += c;
+							operators ++;
+						}
+						break;
+				}
+				break;
 		}
 		
 	}
@@ -282,21 +319,30 @@ std::queue<std::string> Lexer::parseString(std::string input){
 
 std::string Lexer::appendToken(std::queue<std::string> &tokens, std::string token){
 	if(token.compare("") != 0){
-		if(!isalpha(token[0]) && !isdigit(token[0]) && isgraph(token[0]) && token.size() == 2){
-			if(doubleOpsMap.find(token) == doubleOpsMap.end()){
-				tokens.push(token.substr(0,1));
-				tokens.push(token.substr(1));
-			} else {
-				tokens.push(token);
-			}
-		}
-		else {
-			tokens.push(token);
-		}
+		tokens.push(token);
 	}
 	
-
 	return "";
+}
+
+Lexer::State Lexer::handleDoubles(std::queue<std::string> &tokens, std::string &token){
+	if(!token.compare("/*")){
+		token = "";
+		return blockComment;
+	}
+	else if(!token.compare("//")){
+		token = "";
+		return lineComment;
+	}
+	else if(doubleOpsMap.find(token) == doubleOpsMap.end()){
+		tokens.push(token.substr(0,1));
+		tokens.push(token.substr(1));
+	}
+	else {
+		tokens.push(token);
+	}
+	token = "";
+	return NoState;
 }
 
 void Lexer::throwError(std::string errorMessage){
