@@ -297,7 +297,6 @@ std::queue<std::string> Lexer::parseString(std::string input){
 					case Special:
 						if(operators == 1){
 							token += c;
-							tokens.push(token);
 							if(!token.compare("*/")){
 								currentState = NoState;
 							}
