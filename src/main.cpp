@@ -15,6 +15,9 @@ int main(){
 	
 	for(int i = 0; i < x; i++){
 		cout << tokens.front() << endl;
+		if(tokens.front().size() == 0){
+			cout << "BLANK" << endl;
+		}
 		tokens.pop();
 	}
 

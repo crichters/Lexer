@@ -3,6 +3,9 @@
 // Begin LEXER _ PUBLIC
 
 Lexer::Lexer(){
+	for(std::string op : doubleOps){
+		doubleOpsMap[op] = 1;
+	}
 }
 
 Lexer::~Lexer(){
@@ -33,146 +36,267 @@ std::queue<std::string> Lexer::getTokenFromFile(std::string path){
 
 std::queue<std::string> Lexer::parseString(std::string input){
 
+	int spaces = 0;
+	int operators = 0;
 
 	std::queue<std::string> tokens;
 	std::string token = "";
 
-	enum State {NoState, inWord, inNum, oneSpace, twoSpace, threeSpace, fourSpace};
-	enum characterType { NoType, Alpha, Numeric, Space, Tab, Special, NewLine };
+	
 
 	characterType inputChar = NoType;
 	State currentState = NoState;
 
 	for(char c : input){
 
-		// Check for Character Type
-		if(isalpha(c)){
-			inputChar = Alpha;
-		} 
-		else if(isdigit(c)){
-			inputChar = Numeric;
-		} 
-		else if(isgraph(c)){
-			inputChar = Special;
+		std::string charString(1, c);
+
+		if(c == Space || c == Tab || c == NewLine){
+
+			inputChar = (characterType)c;
 		}
 		else {
-			inputChar = NoType;
+
+			// Check for Character Type
+			if(isalpha(c)){
+				inputChar = Alpha;
+			} 
+			else if(isdigit(c)){
+				inputChar = Numeric;
+			} 
+			else if(isgraph(c)){
+				inputChar = Special;
+			}
+			else {
+				inputChar = NoType;
+			}
 		}
 
-		// Adjust Tokens and State depending on table lookup.
-		switch(LXhashPairs(currentState, inputChar)){
-			
-			// BEGIN NoState checks
-			case LXhashPairs(NoState, Alpha):
-				token += c;
-				currentState = inWord;
+		switch(currentState){
+			case NoState:
+				switch(inputChar){
+					case Alpha:
+						token += c;
+						currentState = inWord;
+						break;
+
+					case Numeric:
+						token += c;
+						currentState = inNum;
+						break;
+
+					case Special:
+						token += c;
+						operators ++;
+						currentState = inOp;
+						break;
+
+					case Space:
+						currentState = inSpace;
+						break;
+
+					case Tab:
+						appendToken(tokens, "INDENT");
+						break;
+
+					case NewLine:
+						appendToken(tokens, "NEWLINE");
+						break;
+				}
 				break;
 
-			case LXhashPairs(NoState, Numeric):
-				token += c;
-				currentState = inNum;
+			case inWord:
+				switch(inputChar){
+					case Alpha:
+					case Numeric:
+						token += c;
+						break;
+
+					case Special:
+						token = appendToken(tokens, token);
+						token += c;
+						operators ++;
+						currentState = inOp;
+						break;
+
+					case Space:
+						token = appendToken(tokens, token);
+						currentState = inSpace;
+						break;
+
+					case Tab:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "INDENT");
+						currentState = NoState;
+						break;
+
+					case NewLine:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "NEWLINE");
+						currentState = NoState;
+						break;
+				}
 				break;
 
-			case LXhashPairs(NoState, Space):
-				currentState = oneSpace;
+			case inNum:
+
+				switch(inputChar){
+					case Alpha:
+						//THROW ERROR
+						break;
+
+					case Numeric:
+						token += c;
+						break;
+
+					case Special:
+						token = appendToken(tokens, token);
+						token += c;
+						operators ++;
+						currentState = inOp;
+						break;
+
+					case Space:
+						token = appendToken(tokens, token);
+						currentState = inSpace;
+						break;
+
+					case Tab:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "INDENT");
+						currentState = NoState;
+						break;
+
+					case NewLine:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "NEWLINE");
+						currentState = NoState;
+						break;
+				}
 				break;
 
-			case LXhashPairs(NoState, Tab):
-				tokens.push("INDENT");
+			case inSpace:
+
+				switch(inputChar){
+					case Alpha:
+						spaces = 0;
+						token += c;
+						currentState = inWord;
+						break;
+
+					case Numeric:
+						spaces = 0;
+						token += c;
+						currentState = inNum;
+						break;
+
+					case Special:
+						spaces = 0;
+						operators ++;
+						token += c;
+						currentState = inOp;
+						break;
+
+					case Space:
+						if(spaces >= 3){
+							spaces = 0;
+							appendToken(tokens, "INDENT");
+						}
+						else {
+							spaces ++;
+						}
+						break;
+
+					case Tab:
+						spaces = 0;
+						appendToken(tokens, "INDENT");
+						currentState = NoState;
+						break;
+
+					case NewLine:
+						spaces = 0;
+						appendToken(tokens, "NEWLINE");
+						currentState = NoState;
+						break;
+				}
 				break;
 
-			case LXhashPairs(NoState, Special):
-				tokens.push(c);
+			case inOp:
+
+				switch(inputChar){
+					case Alpha:
+						token = appendToken(tokens, token);
+						token += c;
+						operators = 0;
+						currentState = inWord;
+						break;
+
+					case Numeric:
+						token = appendToken(tokens, token);
+						token += c;
+						operators = 0;
+						currentState = inNum;
+						break;
+
+					case Special:
+						if(operators = 2){
+							token += c;
+							token = appendToken(tokens, token);
+							operators = 0;
+							currentState = NoState;
+						}
+						else {
+							token += c;
+							operators ++;
+						}
+						break;
+
+					case Space:
+						token = appendToken(tokens, token);
+						operators = 0;
+						spaces ++;
+						currentState = inSpace;
+						break;
+
+					case Tab:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "INDENT");
+						operators = 0;
+						currentState = NoState;
+						break;
+
+					case NewLine:
+						appendToken(tokens, token);
+						token = appendToken(tokens, "NEWLINE");
+						operators = 0;
+						currentState = NoState;
+						break;
+				}
 				break;
-
-			case LXhashPairs(NoState, NewLine):
-				tokens.push("NEWLINE");
-				break;		
-			// END NoState checks				
-
-			// BEGIN inWord checks
-			case LXhashPairs(inWord, Alpha):
-			case LXhashPairs(inWord, Numeric):
-				token += c;
-				break;
-
-			case LXhashPairs(inWord, Space):
-				tokens.push(token);
-				token = "";
-				currentState = oneSpace;
-				break;
-
-			case LXhashPairs(inWord, Tab):
-				tokens.push(token);
-				tokens.push("INDENT");
-				token = "";	
-				currentState = NoState;
-				break;
-
-			case LXhashPairs(inWord, Special):
-				tokens.push(token);
-				tokens.push(c);
-				token = "";
-				currentState = NoState;
-				break;
-
-			case LXhashPairs(inWord, NewLine):
-				tokens.push(token);
-				tokens.push("NEWLINE");
-				token = "";	
-				currentState = NoState;
-				break;	
-			// END inWord checks
-
-			// BEGIN inNum checks
-			case LXhashPairs(inNum, Alpha):
-				// THROW ERROR
-				break;
-
-			case LXhashPairs(inNum, Numeric):
-				token += c;
-				break;
-
-			case LXhashPairs(inNum, Space):
-				tokens.push(token);
-				token = "";
-				currentState = oneSpace;
-				break;		
-
-			case LXhashPairs(inNum, Tab):
-				tokens.push(token);
-				tokens.push("INDENT");
-				token = "";
-				currentState = NoState;
-				break;
-
-			case LXhashPairs(inNum, Special):
-				tokens.push	
-			// END inNum checks	
-
-			// BEGIN oneSpace checks
-			case LXhashPairs(oneSpace, Alpha):
-				token += c;
-				currentState = inWord;
-				break;
-
-			case LXhashPairs(oneSpace, Numeric):
-				token += c;
-				currentState = inNum;
-				break;	
-
-			case LXhashPairs(oneSpace, Space):
-				currentState = twoSpace;
-				break;	
-			// END oneSpace checks	
-
 		}
 		
 	}
 
-	tokens.push(token);
-
 	return tokens;
+}
+
+std::string Lexer::appendToken(std::queue<std::string> &tokens, std::string token){
+	if(token.compare("") != 0){
+		if(!isalpha(token[0]) && !isdigit(token[0]) && isgraph(token[0]) && token.size() == 2){
+			if(doubleOpsMap.find(token) == doubleOpsMap.end()){
+				tokens.push(token.substr(0,1));
+				tokens.push(token.substr(1));
+			} else {
+				tokens.push(token);
+			}
+		}
+		else {
+			tokens.push(token);
+		}
+	}
+	
+
+	return "";
 }
 
 void Lexer::throwError(std::string errorMessage){

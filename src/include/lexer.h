@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <cmath>
 #include <cctype>
+#include <unordered_map> 
+#include <vector>
 
 // DEBUG
 //#include <iostream>
@@ -20,11 +22,16 @@ constexpr uint LXhashPairs(int x, int y){
 
 class Lexer {
 
+	enum State {NoState, inWord, inNum, inSpace, inOp};
+	enum characterType { NoType, Alpha, Numeric, Special, Space = ' ', Tab = '\t', NewLine = '\n'};
+
+	std::vector<std::string> doubleOps = {"==", "<=", ">=", "!=", "+=", "-=", "*=", "/=", "%=", "++", "--", "**", "//" ">>", "<<", "&&", "||"};
+	std::unordered_map<std::string, int> doubleOpsMap;
+
 	std::queue<std::string> parseString(std::string input);
 	void throwError(std::string errorMessage);
-	
 
-
+	std::string appendToken(std::queue<std::string> &tokens, std::string token);
 
 public:
 
